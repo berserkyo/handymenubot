@@ -268,6 +268,7 @@ app.post('/message', function(req, res) {
             }).send(JSON.stringify(res_object));
         }
         if (_obj.content == "아침 메뉴") {
+            console.log(today + ' 아침 메뉴 클릭->' + _obj.user_key);
             dbSelectBreakfast(function(msg) {
                 res.set({
                     'content-type': 'application/json'
@@ -275,6 +276,7 @@ app.post('/message', function(req, res) {
             });
         }
         if (_obj.content == "점심 메뉴") {
+            console.log(today + ' 점심 메뉴 클릭->' + _obj.user_key);
             dbSelectLunch(function(msg) {
                 res.set({
                     'content-type': 'application/json'
@@ -282,6 +284,7 @@ app.post('/message', function(req, res) {
             });
         }
         if (_obj.content == "저녁 메뉴") {
+            console.log(today + ' 저녁 메뉴 클릭->' + _obj.user_key);
             dbSelectDinner(function(msg) {
                 res.set({
                     'content-type': 'application/json'
@@ -289,7 +292,6 @@ app.post('/message', function(req, res) {
             });
         }
     }
-
 
 });
 
