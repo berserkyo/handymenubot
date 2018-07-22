@@ -3,9 +3,9 @@ var fs = require('fs');
 var sqlite3 = require('sqlite3').verbose();
 
 // DB 저장할 디렉토리가 없으면 생성
-var savedir = __dirname + "/db"; // --- (※1)
-if (!fs.existsSync(savedir)) { // --- (※2)
-    fs.mkdirSync(savedir); // --- (※3)
+var savedir = __dirname + "/db"; 
+if (!fs.existsSync(savedir)) { 
+    fs.mkdirSync(savedir); 
 }
 // DB 경로 지정
 var DB_PATH = __dirname + "/db/handymenu.sqlite";
@@ -38,6 +38,7 @@ if(first_arg == "select"){
 if(first_arg == "delete"){
   dbDelete();
 };
+//사용법 
 if(first_arg == null || (first_arg != 'select' && first_arg != 'delete') ){
   console.log('사용법(1) :  node db_control select  --> handymenu 테이블 셀렉트함' + '\n' + '사용법(2) :  node db_control delete  --> handymenu 테이블 삭제');
 }
