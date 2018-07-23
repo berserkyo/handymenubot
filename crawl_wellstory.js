@@ -120,9 +120,9 @@ function crawl_start() {
                 } else {
                     c_meal = c_meal_list[(idx % 5) - 1];
                     c_menu = $(this).text().replace(/^\s+|\s+$/g, '').replace(/\n/g, '$@').replace(/\s/g, '');
-                    c_menu_origin = c_menu.split("$@$@").join(",");
-                    c_menu = c_menu_origin.substring(0, c_menu_origin.lastIndexOf(','));
-                    c_kcal = c_menu_origin.substring(c_menu_origin.lastIndexOf(',') + 1);
+                    c_menu_origin = c_menu.split("$@$@").join(", ");
+                    c_menu = c_menu_origin.substring(0, c_menu_origin.lastIndexOf(', '));
+                    c_kcal = c_menu_origin.substring(c_menu_origin.lastIndexOf(', ') + 1);
                     c_kcal = c_kcal.substring(0, c_kcal.lastIndexOf('K'));
 
                     console.log('idx-->' + idx + " c_days-->" + c_days + "    c_course-->" + c_course + "   c_meal-->" + c_meal + "    c_menu--->" + c_menu + '   c_kcal-->' + c_kcal);
