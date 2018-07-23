@@ -38,6 +38,9 @@ function crawl_start() {
 
             var text = $(this).text();
             var check_crawl = text.startsWith(today_crawl);
+            //텍스트 내용 다듬기
+            text = text.replace('중식  ','오띠모푸드 중식'+'\n');
+            text = text.replace('...',' ');
             //텍스트 파일생성
             if (check_crawl) {
                 fs.writeFile(savedir + "/" + today_text_name, text, 'utf8', function(error) {
