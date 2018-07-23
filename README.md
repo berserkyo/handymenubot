@@ -4,5 +4,6 @@
 - Language      : **Node.js**
 - WAS           : **Express**
 - DataBase      : **Sqlite3**
+- Crawling      : **cheerio-httpcli (Module)**
 - Scheduling    : **Node-cron (Module)**
 - Demon execute : **Forever (Module)**
