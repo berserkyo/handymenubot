@@ -1,4 +1,4 @@
-# 핸디소프트 식당 메뉴봇 by HandySoft BPM PS Hwang Jewon
+# 핸디소프트 식당 메뉴봇 by Hwang Jewon
 
 ## Development environment
 - Language      : **Node.js**
