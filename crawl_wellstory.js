@@ -134,10 +134,10 @@ function crawl_start() {
 }
 
 //매주 월요일 오전 0~11시까지 매25분마다, 1시간 단위로 11번 실행
-//cron.schedule('25 0-11 * * 1', function() {
+cron.schedule('25 0-11 * * 1', function() {
     dbSelectCheck();
     console.log('info', 'crawl_wellstory---At 25 minutes past the hours between 0:00-11:00 on Mon -->' + new Date());
-//});
+});
 
 console.log("crawl_wellstory start--------- " + new Date());
 //db insert 시에 db.close() 구문해놓으면 close 가 먼저 수행되기때문에 에러남.. close 처리 하지 않아도 되는듯..
