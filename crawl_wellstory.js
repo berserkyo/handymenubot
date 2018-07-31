@@ -16,14 +16,6 @@ var DB_PATH = __dirname + "/db/handymenu.sqlite";
 // 데이터 베이스 연결
 var db = new sqlite3.Database(DB_PATH);
 
-var today = new Date();
-var year = today.getFullYear();
-var mm = today.getMonth() + 1;
-mm = (mm < 10) ? '0' + mm : mm;
-var dd = today.getDate();
-dd = (dd < 10) ? '0' + dd : dd;
-today_wellstory_day = year + "-" + mm + "-" + dd;
-
 //크롤링 데이터를 테이블에 입력
 function dbInsert(days, course, meal, menu, kcal) {
     db.serialize(function() {
@@ -38,6 +30,14 @@ function dbInsert(days, course, meal, menu, kcal) {
 
 //이미 들어간 값이 있는지 테이블 조회 (매주 월요일 새벽 1-11 시까지 스케쥴러로 돌아감)
 function dbSelectCheck() {
+    var today = new Date();
+    var year = today.getFullYear();
+    var mm = today.getMonth() + 1;
+    mm = (mm < 10) ? '0' + mm : mm;
+    var dd = today.getDate();
+    dd = (dd < 10) ? '0' + dd : dd;
+    today_wellstory_day = year + "-" + mm + "-" + dd;
+
     db.serialize(function() {
         var sql = "SELECT id,days,course,meal,menu,kcal FROM HANDYMENU WHERE days = ? AND course = ? AND meal = ? ";
         db.all(sql, [today_wellstory_day, 'Korean', '아침'], function(err, row) {
@@ -134,10 +134,10 @@ function crawl_start() {
 }
 
 //매주 월요일 오전 0~11시까지 매25분마다, 1시간 단위로 11번 실행
-cron.schedule('25 0-11 * * 1', function() {
+//cron.schedule('25 0-11 * * 1', function() {
     dbSelectCheck();
     console.log('info', 'crawl_wellstory---At 25 minutes past the hours between 0:00-11:00 on Mon -->' + new Date());
-});
+//});
 
 console.log("crawl_wellstory start--------- " + new Date());
 //db insert 시에 db.close() 구문해놓으면 close 가 먼저 수행되기때문에 에러남.. close 처리 하지 않아도 되는듯..
