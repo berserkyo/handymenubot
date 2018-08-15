@@ -39,6 +39,9 @@ function crawl_start(str) {
           today_text_name = year + "_" + mm + "_" + dd + "_suksik.txt";
         }
 
+        today_image_name = "2018_8_14_suksik.jpg";
+        today_text_name = "2018_8_14_suksik.txt";
+        today_crawl = "8/14";
         console.log("today_crawl--> " + today_crawl);
 
         // 링크를 추출하여 표시
@@ -51,10 +54,28 @@ function crawl_start(str) {
 
             //텍스트 내용 다듬기
             if(str == 'jungsik'){
-              text = text.replace('중식  ','오띠모푸드 중식'+'\n');
+              //중식 뒤의 스페이스를 정확히 \n 으로 치환, 중식뒤에 스페이스 2자리까지는 치환가능
+              if(text.indexOf("중식  ") > -1){
+                  text = text.replace('중식  ','오띠모푸드 (중식)'+'\n');
+              }else if(text.indexOf("중식 ") > -1){
+                  text = text.replace('중식 ','오띠모푸드 (중식)'+'\n');
+              }else if(text.indexOf("중식") > -1){
+                  text = text.replace('중식','오띠모푸드 (중식)'+'\n');
+              }else{
+                  text = text.replace('중식','오띠모푸드 (중식)'+'\n');
+              }
               check_str = text.indexOf('중식');
             }else{
-              text = text.replace('석식  ','오띠모푸드 석식'+'\n');
+              //석식 뒤의 스페이스를 정확히 \n 으로 치환, 석식뒤에 스페이스 2자리까지는 치환가능
+              if(text.indexOf("석식  ") > -1){
+                  text = text.replace('석식  ','오띠모푸드 (석식)'+'\n');
+              }else if(text.indexOf("석식 ") > -1){
+                  text = text.replace('석식 ','오띠모푸드 (석식)'+'\n');
+              }else if(text.indexOf("석식") > -1){
+                  text = text.replace('석식','오띠모푸드 (석식)'+'\n');
+              }else{
+                  text = text.replace('석식','오띠모푸드 (석식)'+'\n');
+              }
               check_str = text.indexOf('석식');
             }
             text = text.replace('...',' ');
@@ -88,6 +109,7 @@ function crawl_start(str) {
                         }
                     });
                 });
+                isexit = true;
             } else {
                 console.log('오늘 날짜' + today_crawl +'의 '+ str + ' 오띠모푸드 데이터가 없습니다.');
                 isexit = true;
