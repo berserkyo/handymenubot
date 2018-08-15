@@ -15,7 +15,7 @@ if (!fs.existsSync(savedir)) {
 var url = "https://ko-kr.facebook.com/ottimofood/";
 var param = {};
 
-function crawl_start() {
+function crawl_start(str) {
     //금일 날짜 추출
     client.fetch(url, param, function(err, $, res) {
         if (err) {
@@ -28,8 +28,17 @@ function crawl_start() {
         var dd = today.getDate();
         var mm = today.getMonth() + 1; //January is 0
         var today_crawl = mm + "/" + dd;
-        var today_image_name = year + "_" + mm + "_" + dd + ".jpg";
-        var today_text_name = year + "_" + mm + "_" + dd + ".txt";
+        var today_image_name = "";
+        var today_text_name = "";
+
+        if(str == 'jungsik'){
+          today_image_name = year + "_" + mm + "_" + dd + "_jungsik.jpg";
+          today_text_name = year + "_" + mm + "_" + dd + "_jungsik.txt";
+        }else{
+          today_image_name = year + "_" + mm + "_" + dd + "_suksik.jpg";
+          today_text_name = year + "_" + mm + "_" + dd + "_suksik.txt";
+        }
+
         console.log("today_crawl--> " + today_crawl);
 
         // 링크를 추출하여 표시
@@ -38,11 +47,19 @@ function crawl_start() {
 
             var text = $(this).text();
             var check_crawl = text.startsWith(today_crawl);
+            var check_str = "";
+
             //텍스트 내용 다듬기
-            text = text.replace('중식  ','오띠모푸드 중식'+'\n');
+            if(str == 'jungsik'){
+              text = text.replace('중식  ','오띠모푸드 중식'+'\n');
+              check_str = text.indexOf('중식');
+            }else{
+              text = text.replace('석식  ','오띠모푸드 석식'+'\n');
+              check_str = text.indexOf('석식');
+            }
             text = text.replace('...',' ');
             //텍스트 파일생성
-            if (check_crawl) {
+            if (check_crawl && check_str > -1) {
                 fs.writeFile(savedir + "/" + today_text_name, text, 'utf8', function(error) {
                     console.log(savedir + "/" + today_text_name + ' text write end')
                 });
@@ -72,7 +89,7 @@ function crawl_start() {
                     });
                 });
             } else {
-                console.log('오늘 날짜' + today_crawl + '의 오띠모푸드 데이터가 없습니다.');
+                console.log('오늘 날짜' + today_crawl +'의 '+ str + ' 오띠모푸드 데이터가 없습니다.');
                 isexit = true;
                 return false;
             }
@@ -80,9 +97,15 @@ function crawl_start() {
     });
 }
 
-//월요일에서 금요일 11:00 - 12:59 까지 1분단위로 오띠모푸드 사이트 크롤링
-cron.schedule('*/1 11-12 * * 1-5', function() {
-    crawl_start();
-    console.log('info', 'crawl_ottimofood---Every 1 minute between the hours of 11:00-12:00 on Mon-Fri -->' + new Date());
+//월요일에서 금요일 11:00 - 15:59 까지 1분단위로 오띠모푸드 사이트 크롤링 (중식메뉴)
+cron.schedule('*/1 11-15 * * 1-5', function() {
+    crawl_start('jungsik');
+    console.log('info', 'crawl_ottimofood--jungsik--Every 1 minute between the hours of 11:00-15:59 on Mon-Fri -->' + new Date());
+});
+
+//월요일에서 금요일 17:00 - 19:59 까지 1분단위로 오띠모푸드 사이트 크롤링 (석식메뉴)
+cron.schedule('*/1 17-19 * * 1-5', function() {
+    crawl_start('suksik');
+    console.log('info', 'crawl_ottimofood--suksik--Every 1 minute between the hours of 17:00-19:59 on Mon-Fri -->' + new Date());
 });
 console.log("crawl_ottimo start---------" + new Date());

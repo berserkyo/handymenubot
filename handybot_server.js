@@ -3,6 +3,7 @@ var app = express();
 var fs = require('fs');
 var bodyParser = require('body-parser');
 var sqlite3 = require('sqlite3').verbose();
+var dateutil = require('date-utils');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
@@ -26,6 +27,8 @@ var today_image_name = "";
 var ottimo_text = "";
 var today_image_url = "";
 var today_wellstory_day = "";
+var out_ottimo_text = "";
+var out_today_image_url = "";
 
 //금일날짜 확인 및 셋팅 함수
 function setToday(str) {
@@ -39,9 +42,26 @@ function setToday(str) {
         var year = today.getFullYear();
         var mm = today.getMonth() + 1;
 
-        today_text_name = year + "_" + mm + "_" + dd + ".txt";
-        today_ottimo_message = year + "/" + mm + "/" + dd + " (" + todayLabel + ") (중식)";
-        today_image_name = year + "_" + mm + "_" + dd + ".jpg";
+        //오띠모푸드 중식/석식 시간체크
+        dateutil = new Date();
+        var ottimo_time = dateutil.toFormat('HH24:MI');
+
+        if(ottimo_time >= '00:00' && ottimo_time <= '16:00'){
+          today_text_name = year + "_" + mm + "_" + dd + "_jungsik.txt";
+          today_ottimo_message = year + "/" + mm + "/" + dd + " (" + todayLabel + ") (중식)";
+          today_image_name = year + "_" + mm + "_" + dd + "_jungsik.jpg";
+
+          ottimo_text = '아직 ' + today_ottimo_message + " 메뉴가 공지되지 않았습니다. 오띠모푸드 중식 메뉴는 오전 11:00 ~ 12:00 사이에 업데이트 됩니다.";
+          today_image_url = "http://13.209.234.250:3000/no_menu.jpg";
+        }else{
+          today_text_name = year + "_" + mm + "_" + dd + "_suksik.txt";
+          today_ottimo_message = year + "/" + mm + "/" + dd + " (" + todayLabel + ") (석식)";
+          today_image_name = year + "_" + mm + "_" + dd + "_suksik.jpg";
+
+          ottimo_text = '아직 ' + today_ottimo_message + " 메뉴가 공지되지 않았습니다. 오띠모푸드 석식 메뉴는 오후 17:00 ~ 18:00 사이에 업데이트 됩니다.";
+          today_image_url = "http://13.209.234.250:3000/no_menu2.jpg";
+        }
+
     } else {
         var today = new Date();
         var year = today.getFullYear();
@@ -214,30 +234,34 @@ app.post('/message', function(req, res) {
             fs.readFile(__dirname + '/crawl_data/' + today_text_name, 'utf-8', function(error, data) {
                 if (error) {
                     if (todayLabel == '토' || todayLabel == '일') {
-                        ottimo_text = "주말은 식당 쉽니다." + "\n" + "월~금요일에 이용해주세요.";
+                        //ottimo_text = "주말은 식당 쉽니다." + "\n" + "월~금요일에 이용해주세요.";
+                        out_ottimo_text = "주말은 식당 쉽니다." + "\n" + "월~금요일에 이용해주세요.";
                         today_image_url = "http://13.209.234.250:3000/holyday.jpg";
                     } else {
-                        ottimo_text = '아직 ' + today_ottimo_message + " 메뉴가 공지되지 않았습니다. 오띠모푸드 중식 메뉴는 오전 11:00 ~ 12:00 사이에 업데이트 됩니다.";
-                        today_image_url = "http://13.209.234.250:3000/no_menu.jpg";
+                        //ottimo_text = '아직 ' + today_ottimo_message + " 메뉴가 공지되지 않았습니다. 오띠모푸드 중식 메뉴는 오전 11:00 ~ 12:00 사이에 업데이트 됩니다.";
+                        out_ottimo_text = ottimo_text;
+                        //today_image_url = "http://13.209.234.250:3000/no_menu.jpg";
                     }
                 } else {
-                    ottimo_text = data;
+                    //ottimo_text = data;
+                    out_ottimo_text = data;
                     today_image_url = "http://13.209.234.250:3000/" + today_image_name;
                 }
+                out_today_image_url = today_image_url;
             });
-            console.log(today + ' 오띠모푸드 클릭->' + _obj.user_key + '    img-->' + today_image_url);
+            console.log(today + ' 오띠모푸드 클릭->' + _obj.user_key + '    img-->' + out_today_image_url);
 
             res_object = {
                 "message": {
-                    "text": ottimo_text,
+                    "text": out_ottimo_text,
                     "photo": {
-                        "url": today_image_url,
+                        "url": out_today_image_url,
                         "width": 720,
                         "height": 630
                     },
                     "message_button": {
                         "label": "확대사진 입니다.",
-                        "url": today_image_url
+                        "url": out_today_image_url
                     }
                 },
                 "keyboard": {
