@@ -39,9 +39,6 @@ function crawl_start(str) {
           today_text_name = year + "_" + mm + "_" + dd + "_suksik.txt";
         }
 
-        today_image_name = "2018_8_14_suksik.jpg";
-        today_text_name = "2018_8_14_suksik.txt";
-        today_crawl = "8/14";
         console.log("today_crawl--> " + today_crawl);
 
         // 링크를 추출하여 표시
