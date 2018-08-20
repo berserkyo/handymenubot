@@ -28,6 +28,8 @@ function crawl_start(str) {
         var dd = today.getDate();
         var mm = today.getMonth() + 1; //January is 0
         var today_crawl = mm + "/" + dd;
+        var today_crawl_month = mm;
+        var today_crawl_day = dd;
         var today_image_name = "";
         var today_text_name = "";
 
@@ -47,6 +49,13 @@ function crawl_start(str) {
 
             var text = $(this).text();
             var check_crawl = text.startsWith(today_crawl);
+            var check_crawl_month = text.indexOf(today_crawl_month);
+            var check_crawl_day = text.indexOf(today_crawl_day);
+            var check_crawl_month_day =  check_crawl_month + check_crawl_day;
+            console.log("check_crawl_month--> " + check_crawl_month);
+            console.log("check_crawl_day--> " + check_crawl_day);
+            console.log("check_crawl_month_day--> " + check_crawl_month_day);
+
             var check_str = "";
 
             //텍스트 내용 다듬기
@@ -77,7 +86,7 @@ function crawl_start(str) {
             }
             text = text.replace('...',' ');
             //텍스트 파일생성
-            if (check_crawl && check_str > -1) {
+            if ( (check_crawl || check_crawl_month_day > 0 ) && check_str > -1) {
                 fs.writeFile(savedir + "/" + today_text_name, text, 'utf8', function(error) {
                     console.log(savedir + "/" + today_text_name + ' text write end')
                 });
