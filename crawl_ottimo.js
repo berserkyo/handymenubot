@@ -125,8 +125,8 @@ function crawl_start(str) {
     });
 }
 
-//월요일에서 금요일 11:00 - 15:59 까지 1분단위로 오띠모푸드 사이트 크롤링 (중식메뉴)
-cron.schedule('*/1 11-15 * * 1-5', function() {
+//월요일에서 금요일 11:00 - 12:59 까지 1분단위로 오띠모푸드 사이트 크롤링 (중식메뉴)
+cron.schedule('*/1 11-12 * * 1-5', function() {
     crawl_start('jungsik');
     console.log('info', 'crawl_ottimofood--jungsik--Every 1 minute between the hours of 11:00-15:59 on Mon-Fri -->' + new Date());
 });
