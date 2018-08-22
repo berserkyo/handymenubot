@@ -248,7 +248,7 @@ app.post('/message', function(req, res) {
             if (_obj.content == "점심 메뉴(오띠모푸드)"){
               setToday('ottimoJungsik');
             }else{
-              setToday('ottimoSuksik');              
+              setToday('ottimoSuksik');
             }
 
             fs.readFile(__dirname + '/crawl_data/' + today_text_name, 'utf-8', function(error, data) {
@@ -267,10 +267,8 @@ app.post('/message', function(req, res) {
                 out_today_image_url = today_image_url;
 
                 if (_obj.content == "점심 메뉴(오띠모푸드)"){
-                  setToday('ottimoJungsik');
                   console.log(today + ' 점심 메뉴(오띠모푸드) 클릭->' + _obj.user_key + '    img-->' + out_today_image_url);
                 }else{
-                  setToday('ottimoSuksik');
                   console.log(today + ' 저녁 메뉴(오띠모푸드)->' + _obj.user_key + '    img-->' + out_today_image_url);
                 }
 
