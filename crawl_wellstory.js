@@ -133,8 +133,8 @@ function crawl_start() {
     });
 }
 
-//매주 월요일 오전 0~11시까지 매25분마다, 1시간 단위로 11번 실행
-cron.schedule('25 0-11 * * 1', function() {
+//매주 월요일 오전 0~2시까지 매25분마다, 1시간 단위로 2번 실행
+cron.schedule('25 0-2 * * 1', function() {
     dbSelectCheck();
     console.log('info', 'crawl_wellstory---At 25 minutes past the hours between 0:00-11:00 on Mon -->' + new Date());
 });
