@@ -2,7 +2,7 @@ const express = require('express');
 var app = express();
 var fs = require('fs');
 var bodyParser = require('body-parser');
-var sqlite3 = require('sqlite3').verbose();
+//var sqlite3 = require('sqlite3').verbose();
 //var dateutil = require('date-utils');
 
 app.use(bodyParser.json());
@@ -17,9 +17,9 @@ if (!fs.existsSync(savedir)) {
 }
 
 // DB 경로 지정
-var DB_PATH = __dirname + "/db/handymenu.sqlite";
+//var DB_PATH = __dirname + "/db/handymenu.sqlite";
 // 데이터 베이스 연결
-var db = new sqlite3.Database(DB_PATH);
+//var db = new sqlite3.Database(DB_PATH);
 
 var today_text_name = "";
 var today_ottimo_message = "";
@@ -29,6 +29,11 @@ var today_image_url = "";
 var today_wellstory_day = "";
 var out_ottimo_text = "";
 var out_today_image_url = "";
+
+var well_text = "";
+var today_well_text_name = "";
+//var today_well_image_url = "";
+var out_well_text = "";
 
 var pavan_text = "";
 var today_pavan_text_name = "";
@@ -67,14 +72,42 @@ function setToday(str) {
         today_image_name = year + "_" + mm + "_" + dd + "_suksik.jpg";
         ottimo_text = '아직 ' + today_ottimo_message + " 메뉴가 공지되지 않았습니다. 오띠모푸드 석식 메뉴는 오후 5시 ~ 6시 사이에 업데이트 됩니다.\n식당사정에 의해 공지되지 않을수도 있습니다.";
         today_image_url = "http://13.209.234.250:3000/no_menu2.jpg";
-    }else if(str == 'wellstory'){
+    }else if(str == 'wellstoryBreakfast'){
         var today = new Date();
         var year = today.getFullYear();
         var mm = today.getMonth() + 1;
-        mm = (mm < 10) ? '0' + mm : mm;
+        //mm = (mm < 10) ? '0' + mm : mm;
         var dd = today.getDate();
-        dd = (dd < 10) ? '0' + dd : dd;
-        today_wellstory_day = year + "-" + mm + "-" + dd;
+        //dd = (dd < 10) ? '0' + dd : dd;
+        //today_wellstory_day = year + "-" + mm + "-" + dd;
+        //var today_well_text_name = "";
+        //var today_well_message = "";
+        //var today_well_image_name = "";
+        //var today_well_image_url = "";
+
+        //파반 카페 낮 메뉴 설정값 셋팅
+        today_well_text_name = year + "_" + mm + "_" + dd + "_well_breakfast_menu.txt";
+        well_text = "아직 메뉴가 공지되지 않았습니다." + "\n" + "삼성 웰스토리 식당 메뉴는 \n식당사정에 의해 공지되지 않을수도 있습니다.";
+        //today_well_image_url = "http://13.209.234.250:3000/no_menu.jpg";
+
+    }else if(str == 'wellstoryLunch'){
+        var today = new Date();
+        var year = today.getFullYear();
+        var mm = today.getMonth() + 1;
+        var dd = today.getDate();
+
+        //파반 카페 점심 메뉴 설정값 셋팅
+        today_well_text_name = year + "_" + mm + "_" + dd + "_well_lunch_menu.txt";
+        well_text = "아직 메뉴가 공지되지 않았습니다." + "\n" + "삼성 웰스토리 식당 메뉴는 \n식당사정에 의해 공지되지 않을수도 있습니다.";
+    }else if(str == 'wellstoryDinner'){
+      var today = new Date();
+      var year = today.getFullYear();
+      var mm = today.getMonth() + 1;
+      var dd = today.getDate();
+
+      //파반 카페 저녁 메뉴 설정값 셋팅
+      today_well_text_name = year + "_" + mm + "_" + dd + "_well_dinner_menu.txt";
+      well_text = "아직 메뉴가 공지되지 않았습니다." + "\n" + "삼성 웰스토리 식당 메뉴는 \n식당사정에 의해 공지되지 않을수도 있습니다.";
     }else if(str == 'pavanMorningMenu'){
       var today = new Date();
       var dd = today.getDate();
@@ -90,7 +123,7 @@ function setToday(str) {
         today_pavan_image_name = "/pavan/pavan_morning_1.jpg";
       }else if(todayLabel == '화' || todayLabel == '목'){
         today_pavan_text_name = "/pavan/pavan_morning_2.txt";
-        today_pavan_image_name = "/pavan/pavan_mornin_2.jpg";
+        today_pavan_image_name = "/pavan/pavan_morning_2.jpg";
       }
       pavan_text = '아직 ' + today_pavan_message + " 메뉴가 공지되지 않았습니다. 파반 카페 아침 메뉴는 오전 9시 ~ 10시 사이에 업데이트 됩니다.\n식당사정에 의해 공지되지 않을수도 있습니다.";
       today_pavan_image_url = "http://13.209.234.250:3000/no_menu.jpg";
@@ -107,136 +140,6 @@ function setToday(str) {
       pavan_text = '아직 ' + today_pavan_message + " 메뉴가 공지되지 않았습니다. 파반 카페 샐러드&샌드위치 메뉴는 오전 11시 ~ 12시 사이에 업데이트 됩니다.\n식당사정에 의해 공지되지 않을수도 있습니다.";
       today_pavan_image_url = "http://13.209.234.250:3000/no_menu.jpg";
     }
-};
-
-//웰스토리 아침메뉴를 db 에서 셀렉트
-function dbSelectBreakfast(callback) {
-    let sql = 'SELECT id,days,course,meal,menu,kcal FROM HANDYMENU WHERE days = ? AND meal = ? and kcal <> 0 ';
-    db.serialize(function() {
-        var chk_cnt = 0;
-        var wellstory_head = "";
-        var res_object = "";
-        var wellstory_text = "";
-        var return_str = "\n";
-        // 데이터 조회
-        db.all(sql, [today_wellstory_day, '아침'], function(err, row) {
-            wellstory_head = today_wellstory_day + " (" + todayLabel + ")" + " 웰스토리 아침 메뉴";
-
-            if (todayLabel == '토' || todayLabel == '일') {
-                wellstory_text = "주말은 식당 쉽니다." + "\n" + "월~금요일에 이용해주세요.";
-            } else {
-                if (row == "") {
-                    wellstory_text = "아직 메뉴가 준비되지 않았습니다.";
-                } else {
-                    row.forEach(function(row) {
-                        if (chk_cnt > 0) {
-                            wellstory_head = "";
-                            return_str = "\n\n";
-                        };
-                        wellstory_text = wellstory_head + wellstory_text + return_str + "<" + row.course + "> " + "\n" + row.menu + "\n(칼로리:" + row.kcal + "Kcal)";
-                        chk_cnt++;
-                    });
-                }
-            }
-            res_object = {
-                "message": {
-                    "text": wellstory_text
-                },
-                "keyboard": {
-                    "type": "buttons",
-                    "buttons": ["오띠모푸드", "삼성웰스토리", "파반 카페"]
-                }
-            };
-            callback(res_object);
-            chk_cnt++;
-        });
-    });
-};
-
-//웰스토리 점심메뉴를 db 에서 셀렉트
-function dbSelectLunch(callback) {
-    let sql = 'SELECT id,days,course,meal,menu,kcal FROM HANDYMENU WHERE days = ? AND meal = ? and kcal <> 0 ';
-    db.serialize(function() {
-        var chk_cnt = 0;
-        var wellstory_head = "";
-        var res_object = "";
-        var wellstory_text = "";
-        var return_str = "\n";
-        // 데이터 조회
-        db.all(sql, [today_wellstory_day, '점심'], function(err, row) {
-            wellstory_head = today_wellstory_day + " (" + todayLabel + ")" + " 웰스토리 점심 메뉴";
-            if (todayLabel == '토' || todayLabel == '일') {
-                wellstory_text = "주말은 식당 쉽니다." + "\n" + "월~금요일에 이용해주세요.";
-            } else {
-                if (row == "") {
-                    wellstory_text = "아직 메뉴가 준비되지 않았습니다.";
-                } else {
-                    row.forEach(function(row) {
-                        if (chk_cnt > 0) {
-                            wellstory_head = "";
-                            return_str = "\n\n";
-                        };
-                        wellstory_text = wellstory_head + wellstory_text + return_str + "<" + row.course + "> " + "\n" + row.menu + "\n(칼로리:" + row.kcal + "Kcal)";
-                        chk_cnt++;
-                    });
-                }
-            }
-            res_object = {
-                "message": {
-                    "text": wellstory_text
-                },
-                "keyboard": {
-                    "type": "buttons",
-                    "buttons": ["오띠모푸드", "삼성웰스토리", "파반 카페"]
-                }
-            };
-            callback(res_object);
-            chk_cnt++;
-        });
-    });
-};
-
-//웰스토리 저녁메뉴를 db 에서 셀렉트
-function dbSelectDinner(callback) {
-    let sql = 'SELECT id,days,course,meal,menu,kcal FROM HANDYMENU WHERE days = ? AND meal = ? and kcal <> 0 ';
-    db.serialize(function() {
-        var chk_cnt = 0;
-        var wellstory_head = "";
-        var res_object = "";
-        var wellstory_text = "";
-        var return_str = "\n";
-        // 데이터 조회
-        db.all(sql, [today_wellstory_day, '저녁'], function(err, row) {
-            wellstory_head = today_wellstory_day + " (" + todayLabel + ")" + " 웰스토리 저녁 메뉴";
-            if (todayLabel == '토' || todayLabel == '일') {
-                wellstory_text = "주말은 식당 쉽니다." + "\n" + "월~금요일에 이용해주세요.";
-            } else {
-                if (row == "") {
-                    wellstory_text = "아직 메뉴가 준비되지 않았습니다.";
-                } else {
-                    row.forEach(function(row) {
-                        if (chk_cnt > 0) {
-                            wellstory_head = "";
-                            return_str = "\n\n";
-                        };
-                        wellstory_text = wellstory_head + wellstory_text + return_str + "<" + row.course + "> " + "\n" + row.menu + "\n(칼로리:" + row.kcal + "Kcal)";
-                        chk_cnt++;
-                    });
-                }
-            }
-            res_object = {
-                "message": {
-                    "text": wellstory_text
-                },
-                "keyboard": {
-                    "type": "buttons",
-                    "buttons": ["오띠모푸드", "삼성웰스토리", "파반 카페"]
-                }
-            };
-            callback(res_object);
-            chk_cnt++;
-        });
-    });
 };
 
 //Kakao API 연계를 위한 키보드 구현
@@ -336,7 +239,6 @@ app.post('/message', function(req, res) {
 
         if (_obj.content == "삼성웰스토리") {
             console.log(today + ' 삼성웰스토리 클릭->' + _obj.user_key);
-            setToday('wellstory');
 
             res_object = {
                 "message": {
@@ -351,28 +253,109 @@ app.post('/message', function(req, res) {
                 'content-type': 'application/json'
             }).send(JSON.stringify(res_object));
         }
+
         if (_obj.content == "아침 메뉴(웰스토리)") {
+            setToday('wellstoryBreakfast');
+
             console.log(today + ' 아침 메뉴(웰스토리) 클릭->' + _obj.user_key);
-            dbSelectBreakfast(function(msg) {
-                res.set({
-                    'content-type': 'application/json'
-                }).send(JSON.stringify(msg));
+            fs.readFile(__dirname + '/crawl_data/' + today_well_text_name, 'utf-8', function(error, data) {
+              if (error) {
+                  if (todayLabel == '토' || todayLabel == '일') {
+                      out_well_text = "주말은 식당 쉽니다." + "\n" + "월~금요일에 이용해주세요.";
+                      //today_well_image_url = "http://13.209.234.250:3000/holyday.jpg";
+                  } else {
+                      out_well_text = well_text;
+                  }
+              } else {
+                  out_well_text = data;
+                  //today_pavan_image_url = "http://13.209.234.250:3000/" + today_pavan_image_name;
+              }
+              //var out_today_well_image_url = today_well_image_url;
+
+              res_object = {
+                  "message": {
+                      "text": out_well_text
+                  },
+                  "keyboard": {
+                      "type": "buttons",
+                      "buttons": ["오띠모푸드", "삼성웰스토리", "파반 카페"]
+                  }
+              };
+              res.set({
+                  'content-type': 'application/json'
+              }).send(JSON.stringify(res_object));
+
             });
         }
+
         if (_obj.content == "점심 메뉴(웰스토리)") {
-            console.log(today + ' 점심 메뉴(웰스토리) 클릭->' + _obj.user_key);
-            dbSelectLunch(function(msg) {
-                res.set({
-                    'content-type': 'application/json'
-                }).send(JSON.stringify(msg));
-            });
+          setToday('wellstoryLunch');
+
+          console.log(today + ' 점심 메뉴(웰스토리) 클릭->' + _obj.user_key);
+          fs.readFile(__dirname + '/crawl_data/' + today_well_text_name, 'utf-8', function(error, data) {
+            if (error) {
+                if (todayLabel == '토' || todayLabel == '일') {
+                    out_well_text = "주말은 식당 쉽니다." + "\n" + "월~금요일에 이용해주세요.";
+                    //today_well_image_url = "http://13.209.234.250:3000/holyday.jpg";
+                } else {
+                    out_well_text = well_text;
+                }
+            } else {
+                out_well_text = data;
+                //today_pavan_image_url = "http://13.209.234.250:3000/" + today_pavan_image_name;
+            }
+            //var out_today_well_image_url = today_well_image_url;
+
+            res_object = {
+                "message": {
+                    "text": out_well_text
+                },
+                "keyboard": {
+                    "type": "buttons",
+                    "buttons": ["오띠모푸드", "삼성웰스토리", "파반 카페"]
+                }
+            };
+            res.set({
+                'content-type': 'application/json'
+            }).send(JSON.stringify(res_object));
+
+
+          });
+
         }
+
         if (_obj.content == "저녁 메뉴(웰스토리)") {
-            console.log(today + ' 저녁 메뉴(웰스토리) 클릭->' + _obj.user_key);
-            dbSelectDinner(function(msg) {
-                res.set({
-                    'content-type': 'application/json'
-                }).send(JSON.stringify(msg));
+            setToday('wellstoryDinner');
+
+            console.log(today + '저녁 메뉴(웰스토리) 클릭->' + _obj.user_key);
+            fs.readFile(__dirname + '/crawl_data/' + today_well_text_name, 'utf-8', function(error, data) {
+              if (error) {
+                  if (todayLabel == '토' || todayLabel == '일') {
+                      out_well_text = "주말은 식당 쉽니다." + "\n" + "월~금요일에 이용해주세요.";
+                      //today_well_image_url = "http://13.209.234.250:3000/holyday.jpg";
+                  } else {
+                      out_well_text = well_text;
+                  }
+              } else {
+                  out_well_text = data;
+                  //today_pavan_image_url = "http://13.209.234.250:3000/" + today_pavan_image_name;
+              }
+              //var out_today_well_image_url = today_well_image_url;
+
+              res_object = {
+                  "message": {
+                      "text": out_well_text
+                  },
+                  "keyboard": {
+                      "type": "buttons",
+                      "buttons": ["오띠모푸드", "삼성웰스토리", "파반 카페"]
+                  }
+              };
+              res.set({
+                  'content-type': 'application/json'
+              }).send(JSON.stringify(res_object));
+
+
             });
         }
 

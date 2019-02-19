@@ -1,144 +1,277 @@
-// 모듈 로드
-var client = require('cheerio-httpcli');
-var request = require('request');
+//모듈 로드
+var casper = require('casper').create();
 var fs = require('fs');
-var URL = require('url');
-var sqlite3 = require('sqlite3').verbose();
 var cron = require('node-cron');
 
-// DB 저장할 디렉토리가 없으면 생성
-var savedir = __dirname + "/db";
-if (!fs.existsSync(savedir)) {
-    fs.mkdirSync(savedir);
-}
-// DB 경로 지정
-var DB_PATH = __dirname + "/db/handymenu.sqlite";
-// 데이터 베이스 연결
-var db = new sqlite3.Database(DB_PATH);
+//메뉴와 스크린샷을 저장할 디렉토리
+var savedir_menu = "crawl_data/";
+var savedir_screenshot = "crawl_data/wellstory/";
 
-//크롤링 데이터를 테이블에 입력
-function dbInsert(days, course, meal, menu, kcal) {
-    db.serialize(function() {
-        // SQL실행하여 테이블 생성
-        db.run('CREATE TABLE IF NOT EXISTS HANDYMENU(id INTEGER PRIMARY KEY, days TEXT, course TEXT, meal TEXT, menu TEXT, kcal INTEGER)');
-        // PreparedStatement로 데이터 삽입
-        var stmt = db.prepare('INSERT INTO HANDYMENU(days, course, meal, menu,kcal) VALUES(?,?,?,?,?)');
-        stmt.run([days, course, meal, menu, kcal]);
-        stmt.finalize();
-    });
-};
+//접속 URL
+var TARGET_URL = "http://112.106.28.115/login_simple.do";
 
-//이미 들어간 값이 있는지 테이블 조회 (매주 월요일 새벽 1-11 시까지 스케쥴러로 돌아감)
-function dbSelectCheck() {
-    var today = new Date();
-    var year = today.getFullYear();
-    var mm = today.getMonth() + 1;
-    mm = (mm < 10) ? '0' + mm : mm;
-    var dd = today.getDate();
-    dd = (dd < 10) ? '0' + dd : dd;
-    today_wellstory_day = year + "-" + mm + "-" + dd;
-
-    db.serialize(function() {
-        var sql = "SELECT id,days,course,meal,menu,kcal FROM HANDYMENU WHERE days = ? AND course = ? AND meal = ? ";
-        db.all(sql, [today_wellstory_day, 'Korean', '아침'], function(err, row) {
-            if (row == "") {
-                console.log('들어가 있는 데이터 없음...');
-                crawl_start();
-                console.log('DB 입력---->'+new Date());
-            } else {
-                console.log('이미 데이터 들어가있음');
-            }
-        });
-    });
-};
-
-//db 컬럼값 변수
-function setDBcoulum() {
-    var c_days = "";
-    var c_days_origin = "";
-    var c_course = "";
-    var c_meal = "";
-    var c_menu = "";
-    var c_menu_origin = "";
-    var c_kcal = "";
-};
-
-//날짜 계산 함수
-function dateAddDel(sDate, nNum, type) {
-    var yy = parseInt(sDate.substr(0, 4), 10);
-    var mm = parseInt(sDate.substr(5, 2), 10);
-    var dd = parseInt(sDate.substr(8), 10);
-
-    if (type == "d") {
-        d = new Date(yy, mm - 1, dd + nNum);
-    } else if (type == "m") {
-        d = new Date(yy, mm - 1 + nNum, dd);
-    } else if (type == "y") {
-        d = new Date(yy + nNum, mm - 1, dd);
-    }
-
-    yy = d.getFullYear();
-    mm = d.getMonth() + 1;
-    mm = (mm < 10) ? '0' + mm : mm;
-    dd = d.getDate();
-    dd = (dd < 10) ? '0' + dd : dd;
-
-    return '' + yy + '-' + mm + '-' + dd;
-}
-
-// URL 지정
-var url = "http://www.samsungwelstory.com/mywelstory/restaurant/weekMenu_shop.jsp?shop_no=A0042766";
-var param = {};
 
 function crawl_start() {
-    //금일 날짜 추출
-    client.fetch(url, param, function(err, $, res) {
-        if (err) {
-            console.log("error");
-            return;
-        }
-        console.log("dbinsert start---");
-        setDBcoulum();
-        var c_meal_list = new Array('아침', '점심', '저녁', '야식/간식');
+  var todayInfo_origin = new Date();
+  var todayInfo = new Date();
 
-        //days 날짜취득
-        $("#content_body > form.form_member01 div.wrap_weeksearch > span").each(function(idx) {
-            var temp = $(this).text().split('~');
-            c_days = temp[0];
-            c_days_origin = c_days;
-            console.log("스크랩 시작 날짜->" + c_days_origin);
-        });
+  var today_param = "";
+  var param_dd = "";
+  var param_mm = "";
 
-        for (var i = 1; i < 6; i++) {
-            if (i > 1) {
-                c_days = dateAddDel(c_days_origin, i - 1, 'd');
-            }
-            //월~금 메뉴
-            $("#tbodyList > tr.tr_" + i + " > td").each(function(idx) {
-                if (idx % 5 == 0) {
-                    c_course = $(this).text();
-                } else {
-                    c_meal = c_meal_list[(idx % 5) - 1];
-                    c_menu = $(this).text().replace(/^\s+|\s+$/g, '').replace(/\n/g, '$@').replace(/\s/g, '');
-                    c_menu_origin = c_menu.split("$@$@").join(", ");
-                    c_menu = c_menu_origin.substring(0, c_menu_origin.lastIndexOf(', '));
-                    c_kcal = c_menu_origin.substring(c_menu_origin.lastIndexOf(', ') + 1);
-                    c_kcal = c_kcal.substring(0, c_kcal.lastIndexOf('K'));
+  var plus_todayLabel = "";
+  var plus_year = "";
+  var plus_mm = "";
+  var plus_dd = "";
 
-                    console.log('idx-->' + idx + " c_days-->" + c_days + "    c_course-->" + c_course + "   c_meal-->" + c_meal + "    c_menu--->" + c_menu + '   c_kcal-->' + c_kcal);
-                    dbInsert(c_days, c_course, c_meal, c_menu, c_kcal);
-                }
-            });
-        }
+  var repeat_cnt = 0;
+
+  var week = new Array('일', '월', '화', '수', '목', '금', '토');
+  var dayOfWeek = new Date().getDay();
+  var todayLabel = week[dayOfWeek];
+
+  casper.start(TARGET_URL, function() {
+    /*this.page.customHeaders = {
+      "User-Agent" : "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:26.0) Gecko/20100101 Firefox/26.0",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,;q=0.8",
+      //"Accept-Language": "en-US,en;q=0.5",
+      //"Accept-Encoding": "gzip, deflate",
+      //"Connection" : "keep-alive"
+    //}*/
+    console.log(casper.getTitle());
+    console.log("wellstory site opened");
+  });
+
+  casper.then(function(){
+    console.log("ID 와 PW로 로그인 처리합니다.");
+
+    this.evaluate(function(){
+        document.getElementById("name").value = "황제원";
+        document.getElementById("phone").value = "01035260793";
+        $('#birth').val("790817");
+        $("#wrap > div.intro_wrap > div.int_login > div.login_checkbox.sex_checkbox > label:nth-child(3)").trigger('click');
+        $("#wrap > div.intro_wrap > div.int_login > div.login_checkbox.article_checkbox > form > label:nth-child(3)").trigger('click');
+        $("#wrap > div.intro_wrap > div.int_login > div.login_checkbox.article_checkbox > form > label:nth-child(8)").trigger('click');
+        $("#wrap > div.intro_wrap > div.int_login > button").trigger('click');
     });
-}
+  });
 
-//매주 월요일 오전 0~2시까지 매25분마다, 1시간 단위로 2번 실행
-cron.schedule('25 0-2 * * 1', function() {
-    dbSelectCheck();
-    console.log('info', 'crawl_wellstory---At 25 minutes past the hours between 0:00-11:00 on Mon -->' + new Date());
-});
 
-console.log("crawl_wellstory start--------- " + new Date());
-//db insert 시에 db.close() 구문해놓으면 close 가 먼저 수행되기때문에 에러남.. close 처리 하지 않아도 되는듯..
-//db.close();
+  casper.then(function(){
+    console.log("로그인 후, 스샷");
+    console.log("1초 후에 AfterLogin.png 으로 저장됩니다.");
+
+    this.wait(1000, function(){
+      var tempToday_f = new Date();
+      var year_f = tempToday_f.getFullYear();
+      var mm_f = tempToday_f.getMonth() + 1; //January is 0
+      var dd_f = tempToday_f.getDate();
+      var today_file_name_f = year_f + "_" + mm_f + "_" + dd_f;
+      this.capture(savedir_screenshot + today_file_name_f +'_AfterLogin.png');
+      //fs.write("test.html", this.getHTML(), "w")
+      console.log(savedir_screenshot + today_file_name_f + '_AfterLogin.png 생성');
+    });
+  });
+
+  //월요일부터 금요일까지의 메뉴 크롤링
+  casper.repeat(5, function(){
+    console.log('repeat_cnt--a>'+repeat_cnt);
+    if(repeat_cnt == 0){
+      var tempToday = new Date();
+      var year = tempToday.getFullYear();
+      var mm = tempToday.getMonth() + 1; //January is 0
+      var dd = tempToday.getDate();
+
+      plus_year = year;
+      plus_mm = mm;
+      plus_dd = dd;
+
+      plus_todayLabel = todayLabel;
+      console.log('plus_mm===>'+plus_mm);
+      console.log('plus_dd===>'+plus_dd);
+    }else{
+      todayInfo.setDate(todayInfo_origin.getDate() + repeat_cnt);
+      plus_year = todayInfo.getFullYear();
+      plus_mm = todayInfo.getMonth() + 1; //January is 0
+      plus_dd = todayInfo.getDate();
+
+      dayOfWeek = todayInfo.getDay();
+      todayLabel = week[dayOfWeek];
+      plus_todayLabel = todayLabel;
+    }
+    var today_string = plus_mm + "월 " + plus_dd + "일" + " (" + plus_todayLabel + ")";
+
+    //월/일 한자리일때 0붙임 (달이 넘어갈때는 ??)
+    if(plus_mm < 10){
+      param_mm = '0' + plus_mm;
+    }else{
+      param_mm = plus_mm;
+    }
+    if(plus_dd < 10){
+      param_dd = '0' + plus_dd;
+    }else{
+      param_dd = plus_dd;
+    }
+    console.log('param_mm===>'+param_mm);
+    console.log('param_dd===>'+param_dd);
+    today_param = plus_year + param_mm + param_dd;
+
+    var today_file_name = plus_year + "_" + plus_mm + "_" + plus_dd;
+console.log('today_string-->'+today_string);
+console.log('today_param-->'+today_param);
+console.log('today_file_name-->'+today_file_name);
+
+  casper.then(function(){
+    //evaluate 사용시 안쪽에 변수 전달 안됨. 또한 로그자체가 찍히지 않기 때문에 디버깅 난감함 -_-;
+    /*this.evaluate(function(){
+      //console.log("today_param--gg2-->"+today_param);
+      location.href = '/menu_today.do?toDay=' + today_param + '&meal_type=1&view_type=LIST';
+    });*/
+    casper.open('http://112.106.28.115/menu_today.do?toDay='+today_param+'&meal_type=1&view_type=LIST');
+
+
+    this.wait(1000, function(){
+      this.capture(savedir_screenshot + today_file_name +'_breakfast.png');
+      console.log(savedir_screenshot + today_file_name +'_breakfast.png 생성');
+
+      var n = this.getElementsInfo('#breakfast > li').length;
+      console.log('메뉴 갯수-->'+n);
+      var menutop_str = "";
+
+      for(var i=1; i<=n ; i++){
+        var restaurant = function(i){
+            var temp = document.querySelector('#breakfast > li:nth-child('+i+') > a > div.logo > div').innerText;
+            return temp;
+        }
+        var resultR = this.evaluate(restaurant, i);
+
+        console.log(i+"--morning restaurant-->" + resultR);
+
+        var menu = function(i){
+            var temp = document.querySelector('#breakfast > li:nth-child('+i+') > a > div.menu_text').innerText;
+            return temp;
+        }
+        var resultM = this.evaluate(menu, i);
+
+        console.log(i+"--morning menu-->" + resultM);
+        if(i == 1){
+            menutop_str = today_string +" 웰스토리 아침메뉴";
+        }else{
+            menutop_str = "";
+        }
+
+        //메뉴 없을시 null 을 안내문구로 치환, 메뉴있을시 제목에 < > 추가
+        if(resultR == null){
+          resultR = "해당시간에는" + "\n" + "준비된 메뉴가 없습니다";
+          resultM = "";
+        }else{
+          resultR = "<"+ resultR + ">";
+        }
+        fs.write(savedir_menu + today_file_name +'_well_breakfast_menu.txt',menutop_str + '\n' + resultR + '\n' +resultM, 'a+');
+      }
+    });
+  });
+
+  casper.then(function(){
+    console.log("점심 메뉴 페이지 이동");
+    casper.open('http://112.106.28.115/menu_today.do?toDay='+today_param+'&meal_type=2&view_type=LIST');
+
+    this.wait(1000, function(){
+      this.capture(savedir_screenshot + today_file_name +'_lunch.png');
+      console.log(savedir_screenshot + today_file_name +'_lunch.png 생성');
+
+      var n = this.getElementsInfo('#lunch > li').length;
+      console.log('메뉴 갯수-->'+n);
+      var menutop_str = "";
+
+      for(var i=1; i<=n ; i++){
+        var restaurant = function(i){
+            var temp = document.querySelector('#lunch > li:nth-child('+i+') > a > div.logo > div').innerText;
+            return temp;
+        }
+        var resultR = this.evaluate(restaurant, i);
+
+        console.log(i+"--lunch restaurant-->" + resultR);
+
+        var menu = function(i){
+            var temp = document.querySelector('#lunch > li:nth-child('+i+') > a > div.menu_text').innerText;
+            return temp;
+        }
+        var resultM = this.evaluate(menu, i);
+
+        console.log(i+"--lunch menu-->" + resultM);
+        if(i == 1){
+            menutop_str = today_string + " 웰스토리 점심메뉴";
+        }else{
+            menutop_str = "";
+        }
+        //메뉴 없을시 null 을 안내문구로 치환, 메뉴있을시 제목에 < > 추가
+        if(resultR == null){
+          resultR = "해당시간에는" + "\n" + "준비된 메뉴가 없습니다";
+          resultM = "";
+        }else{
+          resultR = "<"+ resultR + ">";
+        }
+        fs.write(savedir_menu + today_file_name +'_well_lunch_menu.txt',menutop_str + '\n' + resultR + '\n' +resultM, 'a+');
+      }
+    });
+  });
+
+  casper.then(function(){
+    console.log("저녁 메뉴 페이지 이동");
+    casper.open('http://112.106.28.115/menu_today.do?toDay='+today_param+'&meal_type=3&view_type=LIST');
+
+    this.wait(1000, function(){
+      this.capture(savedir_screenshot + today_file_name +'_dinner.png');
+      console.log(savedir_screenshot + today_file_name +'_dinner.png 생성');
+
+      var n = this.getElementsInfo('#dinner > li').length;
+      console.log('메뉴 갯수-->'+n);
+      var menutop_str = "";
+
+      for(var i=1; i<=n ; i++){
+        var restaurant = function(i){
+            var temp = document.querySelector('#dinner > li:nth-child('+i+') > a > div.logo > div').innerText;
+            return temp;
+        }
+        var resultR = this.evaluate(restaurant, i);
+
+        console.log(i+"--dinner restaurant-->" + resultR);
+
+        var menu = function(i){
+            var temp = document.querySelector('#dinner > li:nth-child('+i+') > a > div.menu_text').innerText;
+            return temp;
+        }
+        var resultM = this.evaluate(menu, i);
+
+        console.log(i+"--dinner menu-->" + resultM);
+        if(i == 1){
+            menutop_str = today_string + " 웰스토리 저녁메뉴";
+        }else{
+            menutop_str = "";
+        }
+        //메뉴 없을시 null 을 안내문구로 치환, 메뉴있을시 제목에 < > 추가
+        if(resultR == null){
+          resultR = "해당시간에는" + "\n" + "준비된 메뉴가 없습니다";
+          resultM = "";
+        }else{
+          resultR = "<"+ resultR + ">";
+        }
+        fs.write(savedir_menu + today_file_name +'_well_dinner_menu.txt',menutop_str + '\n' + resultR + '\n' +resultM, 'a+');
+      }
+    });
+  });
+  console.log('repeat_cnt--b>'+repeat_cnt);
+  repeat_cnt++;
+  });
+
+  casper.run();
+
+  }
+
+  //테스트로 수요일 새벽 1:11 분에 돌게 해봄..
+  //매주 월요일 새벽 1:11분 wellstory 사이트 크롤링
+  cron.schedule('11 1 * * 3', function() {
+      crawl_start();
+      console.log('info', 'crawl_wellstory--mobile_site by Casperjs -- 01:11 on Wednesday -->' + new Date());
+  });
