@@ -1,0 +1,28 @@
+{
+  "name": "src",
+  "version": "1.0.0",
+  "description": "## Development environment - Language      : **Node.js** - WAS           : **Express** - DataBase      : **Sqlite3** - Crawling      : **cheerio-httpcli (Module)** - Scheduling    : **Node-cron (Module)** - Demon execute : **Forever (Module)**",
+  "main": "crawl_ottimo.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/berserkyo/handymenubot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/berserkyo/handymenubot/issues"
+  },
+  "homepage": "https://github.com/berserkyo/handymenubot#readme",
+  "dependencies": {
+    "iconv": "^2.3.2",
+    "node-gyp": "^3.8.0",
+    "rebuild": "^0.1.2"
+  }
+}
