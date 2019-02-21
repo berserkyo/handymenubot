@@ -167,6 +167,10 @@ console.log('today_file_name-->'+today_file_name);
         }else{
           resultR = "<"+ resultR + ">";
         }
+        //마지막 메뉴는 개행문자 제거
+        if(i == n){
+          resultM = resultM.replace(/\s$/gi, "");
+        }
         fs.write(savedir_menu + today_file_name +'_well_breakfast_menu.txt',menutop_str + '\n' + resultR + '\n' +resultM, 'a+');
       }
     });
@@ -211,6 +215,10 @@ console.log('today_file_name-->'+today_file_name);
           resultM = "";
         }else{
           resultR = "<"+ resultR + ">";
+        }
+        //마지막 메뉴는 개행문자 제거
+        if(i == n){
+          resultM = resultM.replace(/\s$/gi, "");
         }
         fs.write(savedir_menu + today_file_name +'_well_lunch_menu.txt',menutop_str + '\n' + resultR + '\n' +resultM, 'a+');
       }
@@ -257,6 +265,10 @@ console.log('today_file_name-->'+today_file_name);
         }else{
           resultR = "<"+ resultR + ">";
         }
+        //마지막 메뉴는 개행문자 제거
+        if(i == n){
+          resultM = resultM.replace(/\s$/gi, "");
+        }
         fs.write(savedir_menu + today_file_name +'_well_dinner_menu.txt',menutop_str + '\n' + resultR + '\n' +resultM, 'a+');
       }
     });
@@ -269,9 +281,8 @@ console.log('today_file_name-->'+today_file_name);
 
   }
 
-  //테스트로 수요일 새벽 1:11 분에 돌게 해봄..
   //매주 월요일 새벽 1:11분 wellstory 사이트 크롤링
-  cron.schedule('11 1 * * 3', function() {
+  cron.schedule('11 1 * * 1', function() {
       crawl_start();
-      console.log('info', 'crawl_wellstory--mobile_site by Casperjs -- 01:11 on Wednesday -->' + new Date());
+      console.log('info', 'crawl_wellstory--mobile_site by Casperjs -- 01:11 on Monday -->' + new Date());
   });
