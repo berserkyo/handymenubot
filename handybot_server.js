@@ -58,7 +58,7 @@ function setToday(str) {
         today_text_name = year + "_" + mm + "_" + dd + "_jungsik.txt";
         today_ottimo_message = year + "/" + mm + "/" + dd + " (" + todayLabel + ") (중식)";
         today_image_name = year + "_" + mm + "_" + dd + "_jungsik.jpg";
-        ottimo_text = '아직 ' + today_ottimo_message + " 메뉴가 공지되지 않았습니다. 오띠모푸드 중식 메뉴는 오전 11시 ~ 12시 사이에 업데이트 됩니다.\n식당사정에 의해 공지되지 않을수도 있습니다.";
+        ottimo_text = '아직 ' + today_ottimo_message + " 메뉴가 공지되지 않았습니다. 오띠모푸드 중식 메뉴는 오전 11시 ~ 13시 사이에 업데이트 됩니다.\n식당사정에 의해 공지되지 않을수도 있습니다.";
         today_image_url = "http://13.209.234.250:3000/no_menu.jpg";
     }else if(str == 'ottimoSuksik'){
         var today = new Date();
@@ -70,7 +70,7 @@ function setToday(str) {
         today_text_name = year + "_" + mm + "_" + dd + "_suksik.txt";
         today_ottimo_message = year + "/" + mm + "/" + dd + " (" + todayLabel + ") (석식)";
         today_image_name = year + "_" + mm + "_" + dd + "_suksik.jpg";
-        ottimo_text = '아직 ' + today_ottimo_message + " 메뉴가 공지되지 않았습니다. 오띠모푸드 석식 메뉴는 오후 5시 ~ 6시 사이에 업데이트 됩니다.\n식당사정에 의해 공지되지 않을수도 있습니다.";
+        ottimo_text = '아직 ' + today_ottimo_message + " 메뉴가 공지되지 않았습니다. 오띠모푸드 석식 메뉴는 오후 5시 ~ 7시 사이에 업데이트 됩니다.\n식당사정에 의해 공지되지 않을수도 있습니다.";
         today_image_url = "http://13.209.234.250:3000/no_menu2.jpg";
     }else if(str == 'wellstoryBreakfast'){
         var today = new Date();
@@ -137,7 +137,7 @@ function setToday(str) {
       today_pavan_text_name = year + "_" + mm + "_" + dd + "_pavan_day_menu.txt";
       today_pavan_message = year + "/" + mm + "/" + dd + " (" + todayLabel + ") (파반 카페 샐러드&샌드위치)";
       today_pavan_image_name = year + "_" + mm + "_" + dd + "_pavan_day_menu.jpg";
-      pavan_text = '아직 ' + today_pavan_message + " 메뉴가 공지되지 않았습니다. 파반 카페 샐러드&샌드위치 메뉴는 오전 11시 ~ 12시 사이에 업데이트 됩니다.\n식당사정에 의해 공지되지 않을수도 있습니다.";
+      pavan_text = '아직 ' + today_pavan_message + " 메뉴가 공지되지 않았습니다. 파반 카페 샐러드&샌드위치 메뉴는 오전 10시 ~ 13시 사이에 업데이트 됩니다.\n식당사정에 의해 공지되지 않을수도 있습니다.";
       today_pavan_image_url = "http://13.209.234.250:3000/no_menu.jpg";
     }
 };
@@ -398,9 +398,9 @@ app.post('/message', function(req, res) {
                 var out_today_pavan_image_url = today_pavan_image_url;
 
                 if (_obj.content == "아침 메뉴(Pavan Cafe)"){
-                  console.log(today + ' 아침 메뉴(Pavan Cafe) 클릭->' + _obj.user_key + '    img-->' + out_today_image_url);
+                  console.log(today + ' 아침 메뉴(Pavan Cafe) 클릭->' + _obj.user_key + '    img-->' + out_today_pavan_image_url);
                 }else{
-                  console.log(today + ' 오늘의 샐러드 & 샌드위치(Pavan Cafe) 클릭->' + _obj.user_key + '    img-->' + out_today_image_url);
+                  console.log(today + ' 오늘의 샐러드 & 샌드위치(Pavan Cafe) 클릭->' + _obj.user_key + '    img-->' + out_today_pavan_image_url);
                 }
 
                 res_object = {

@@ -119,8 +119,8 @@ function changeString(str, index, chr){
 }
 
 
-//월요일에서 금요일 11:00 - 12:59 까지 1분단위로 파반 카페 블로그 사이트 크롤링 (샐러드 & 샌드위치)
-cron.schedule('*/1 11-12 * * 1-5', function() {
+//월요일에서 금요일 10:00 - 12:59 까지 1분단위로 파반 카페 블로그 사이트 크롤링 (샐러드 & 샌드위치)
+cron.schedule('*/1 10-12 * * 1-5', function() {
     crawl_start();
     console.log('info', 'crawl_pavan cafe--salad & sandwich--Every 1 minute between the hours of 11:00-15:59 on Mon-Fri -->' + new Date());
 });
