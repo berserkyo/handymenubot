@@ -82,12 +82,17 @@ function crawl_start() {
                     return;
                 }
 
-                var list = $("div > div > a > img");
+                var list = $("img").filter('.se-image-resource');
                 // img 링크 추출하여 한번만 이미지 다운로드 수행
                 var cnt = 0;
                 $(list).each(function(idx) {
                     if (cnt == 0) {
-                        var src = $(this).attr('src');
+                        var src = $(this).attr('data-lazy-src');
+                        //data-lazy-src 속성값이 없으면 src 이미지 주소를 가져온다.
+                        if(src == undefined){
+                          console.log('data-lazy-src undefiend ');
+                          src = $(this).attr('src');
+                        }
                         // 상대경로를 절대경로로 변환
                         src = URL.resolve(url, src);
                         // 저장 파일 이름 결정
